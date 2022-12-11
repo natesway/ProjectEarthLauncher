@@ -86,9 +86,9 @@ namespace ProjectEarthLauncher
             ShowList("Click OK, go back and click \"Patch and Install\"");
             ShowList("Wait for it to finish and click install");
             ShowList("Click Settings and \"Alow apps from this source\", the click Install, after it's done you can uninstall the patcher and Minecraft Earth");
-            ShowList("Start the server and open the Project Earth app whitch has been installed");
+            ShowList("Start the server and open the Project Earth app which has been installed");
             ShowList("You will see a prompt to \"Download Content\", click Yes (this will download the resource pack)");
-            ShowList("Click \"Let's Play\" and sing in with your Microsoft Acount (you might need the Xbox app for this)");
+            ShowList("Click \"Let's Play\" and sign in with your Microsoft Account (you might need the Xbox app for this)");
             ShowList("Allow access to location and turn on Location");
             ShowList("Done!");
         }
