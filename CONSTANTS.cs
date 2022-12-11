@@ -8,6 +8,6 @@ namespace ProjectEarthLauncher
 {
     public static class CONSTANTS
     {
-        public const string Version = "v1.0.9";
+        public const string Version = "v1.1.0";
     }
 }

@@ -48,7 +48,8 @@ namespace ProjectEarthLauncher
         {
             ResetShowList();
             Console.WriteLine("Play outside▼");
-            ShowList("Port Forward, from port 8668 to ip your server runs on, port your server runs on; Tcp");
+            ShowList("Port Forward, from port 8668 to ip your server runs on, port your server runs on; Tcp (Api)");
+            ShowList("Port Forward, from port 19132 to ip your server runs on, port 19132; Udp (CloudBurst)");
             string publicIP = Program.GetPublicIP();
             if (publicIP == string.Empty)
                 publicIP = "Couldn't get public IP, you can just google \"What is my ip?\"";
