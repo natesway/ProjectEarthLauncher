@@ -80,14 +80,14 @@ namespace ProjectEarthLauncher
             Console.WriteLine("!!!Android Only!!!");
             ShowList("If you don't have it, download Minecraft Earth (can be found here: https://m.apkpure.com/minecraft-earth/com.mojang.minecraftearth/download?from=amp_detail&_gl=11katg20_ga*YW1wLTZaaDJvR1RzOHZEMXhSNDRERDlCcTJqdmx4b3c3UVJOajlteHRncjZocTdyTEc5QWtMUmV1U3hMNzNZV3JHMm8.)");
             ShowList("Download ProjectEarth Patcher app from here: https://ci.rtm516.co.uk/job/ProjectEarth/job/PatcherApp/job/master/lastSuccessfulBuild/artifact/SignApksBuilder-out/AndroidKeys/key0/dev.projectearth.patcher-1.0-unsigned.apk/dev.projectearth.patcher-1.0.apk");
-            ShowList("Open the patcher and click the 3 dots in the top rigth corner");
+            ShowList("Open the patcher and click the 3 dots in the top right corner");
             ShowList("Click settings and tap on \"Locator Server\"");
             ShowList("Delete the default value and enter the ip you have the server setup on (http://192.168.x.x)");
             ShowList("Click OK, go back and click \"Patch and Install\"");
             ShowList("Wait for it to finish and click install");
             ShowList("Click Settings and \"Alow apps from this source\", the click Install, after it's done you can uninstall the patcher and Minecraft Earth");
             ShowList("Start the server and open the Project Earth app whitch has been installed");
-            ShowList("You will see a prompt to \"Download Contect\", click Yes (this will download the resource pack)");
+            ShowList("You will see a prompt to \"Download Content\", click Yes (this will download the resource pack)");
             ShowList("Click \"Let's Play\" and sing in with your Microsoft Acount (you might need the Xbox app for this)");
             ShowList("Allow access to location and turn on Location");
             ShowList("Done!");
