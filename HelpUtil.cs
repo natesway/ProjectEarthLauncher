@@ -16,6 +16,7 @@ namespace ProjectEarthLauncher
             ApiBuild,
             CloudburstRun,
             BuildPlateRLSize,
+            PlayOutside,
         };
 
         private static int sListIndex = 1;
@@ -43,11 +44,27 @@ namespace ProjectEarthLauncher
             Console.WriteLine(message);
         }
 
+        private static void PlayOutside()
+        {
+            ResetShowList();
+            Console.WriteLine("Play outside▼");
+            ShowList("Port Forward, from port 8668 to ip your server runs on, port your server runs on; Tcp");
+            string publicIP = Program.GetPublicIP();
+            if (publicIP == string.Empty)
+                publicIP = "Couldn't get public IP, you can just google \"What is my ip?\"";
+            ShowList($"Open Api\\Controllers\\LocatorController.cs and change line\n" +
+                $"  string baseServerIP = StateSingleton.Instance.config.useBaseServerIP ? ...\n" +
+                $"  to string baseServerIP = \"http://{publicIP}:8668;\"");
+            ShowList("Run Api\\build.bat");
+            ShowList($"Patch MCE to \"http://{publicIP}:8668\"");
+        }
+
         private static void BuildPlateRLSize()
         {
             Console.WriteLine("Play buildplate in real life size▼");
-            Console.WriteLine(" -Navigate to \"Api\\data\\buildplates\" and open the buildplate you want to edit with a text editor");
-            Console.WriteLine(" -Change \"blocksPerMeter\" to 1.0");
+            ResetShowList();
+            ShowList(" -Navigate to \"Api\\data\\buildplates\" and open the buildplate you want to edit with a text editor");
+            ShowList(" -Change \"blocksPerMeter\" to 1.0");
         }
 
         private static void CloudburstRun()

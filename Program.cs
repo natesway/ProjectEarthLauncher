@@ -259,6 +259,7 @@ namespace ProjectEarthLauncher
                 "Failed to build Api>", 
                 "Failed to generate cloudburst files>",
                 "Play buildplate in real life size>",
+                "Play outside>",
                 "Back" 
             };
             Menu menu = new Menu("Help".ToBIG(), options);
@@ -271,6 +272,25 @@ namespace ProjectEarthLauncher
                 HelpUtil.ShowHelp(selected);
                 goto start;
             }
+        }
+
+        public static string GetPublicIP()
+        {
+            string ip = string.Empty;
+            try {
+                using (WebClient client = new WebClient())
+                    ip = client.DownloadString("http://icanhazip.com").Replace("\\r\\n", "").Replace("\\n", "").Trim();
+            } catch { }
+
+            if (ip == string.Empty) {
+                try {
+                    using (WebClient client = new WebClient())
+                        ip = client.DownloadString("http://ipinfo.io/ip").Replace("\\r\\n", "").Replace("\\n", "").Trim();
+                }
+                catch { }
+            }
+
+            return ip;
         }
 
         private static void Uninstall()
@@ -424,8 +444,12 @@ namespace ProjectEarthLauncher
                     processInfo.WindowStyle = ProcessWindowStyle.Normal;
                     processInfo.UseShellExecute = true;
                     processInfo.WorkingDirectory = path + "TileServer/";
-                    Process.Start(processInfo);
-                    Console.WriteLine("TileServer started");
+                    Process tileServerProcess = Process.Start(processInfo);
+                    Thread.Sleep(1000);
+                    if (tileServerProcess.HasExited) {
+                        Console.WriteLine("Failed to launch TileServer, make sure docker is running by opening Docker Desktop");
+                    } else
+                        Console.WriteLine("TileServer started");
                 }
                 else
                     Warning("Config say TileServer is installed, but config.json couldn't be found");
