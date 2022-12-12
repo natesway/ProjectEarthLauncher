@@ -46,6 +46,7 @@
       <Private>True</Private>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Text.Json, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -56,11 +57,20 @@
     <Reference Include="SystemPlus+">
       <HintPath>..\SystemPlus\bin\Release\net48\SystemPlus+.dll</HintPath>
     </Reference>
+    <Reference Include="YamlDotNet, Version=12.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
+      <HintPath>packages\YamlDotNet.12.2.0\lib\net47\YamlDotNet.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CONSTANTS.cs" />
+    <Compile Include="FileTypes\IFile.cs" />
+    <Compile Include="FileTypes\YamlFile.cs" />
     <Compile Include="HelpUtil.cs" />
+    <Compile Include="Json\JsonObject.cs" />
+    <Compile Include="Json\JsonSerializationSettings.cs" />
+    <Compile Include="Json\JsonSerializer.cs" />
     <Compile Include="LauncherInfo.cs" />
+    <Compile Include="FileTypes\LBLFile.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util.cs" />

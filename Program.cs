@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ProjectEarthLauncher.FileTypes;
+using ProjectEarthLauncher.Json;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -206,32 +208,6 @@ namespace ProjectEarthLauncher
                 return GetCommandVersion(command, true);
 
             return version;
-        }
-
-        private static bool CheckCommandExists(string command)
-        {
-            ProcessStartInfo processInfo = new ProcessStartInfo("cmd.exe", $"/c {command} -version >nul 2>&1 && ( echo yes_exist ) || ( echo no_you )");
-            processInfo.CreateNoWindow = true;
-            processInfo.UseShellExecute = false;
-            processInfo.RedirectStandardOutput = true;
-
-            Process process = Process.Start(processInfo);
-
-            bool found = false;
-
-            process.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
-            {
-                if (e.Data != null && e.Data.Contains("yes_exist"))
-                    found = true;
-            };
-
-            process.BeginOutputReadLine();
-
-            process.WaitForExit();
-
-            process.Close();
-
-            return found;
         }
 
         private static void About()
@@ -606,6 +582,10 @@ namespace ProjectEarthLauncher
 
                 File.WriteAllText(path + "Cloudburst/Run.bat", "java -jar cloudburst.jar");
                 Console.WriteLine("Created Run.bat");
+
+                Console.WriteLine("----------Cloudburst SetUp Done----------");
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey(true);
             } catch (Exception e) {
                 Exception(e, false);
                 Console.WriteLine("Press any key to delete files...");
@@ -621,16 +601,15 @@ namespace ProjectEarthLauncher
                     }
                     Console.WriteLine("Installation Clean(Deletion) Exception:");
                     Exception(cleanEx, false);
-
-                    Console.WriteLine("Installation Exception:");
                 }
                 else
                     Console.WriteLine("Failed to install, already created files were deleted");
-            }
 
-            Console.WriteLine("----------Cloudburst SetUp Done----------");
-            Console.WriteLine("Press any key to continue...");
-            Console.ReadKey(true);
+
+                Console.WriteLine("Press any key to exit...");
+                Console.ReadKey(true);
+                return;
+            }
         }
 
         private static void EditAppSettings(string installDir, int port)
@@ -716,46 +695,49 @@ namespace ProjectEarthLauncher
 
         private static void EditApiConfig(string installDir, string ip, int port)
         {
-            List<string> text = File.ReadAllLines(installDir + "Api/data/config/apiconfig.json").ToList();
-            text[1] = $"	\"baseServerIP\": \"http://{ip}:{port}\",";
-            text[text.Count - 2] += ",";
-            text.Insert(text.Count - 1, "\t\"multiplayerAuthKeys\": {\r\n" +
-                $"\t\t\"{ip}\":\"/g1xCS33QYGC+F2s016WXaQWT8ICnzJvdqcVltNtWljrkCyjd5Ut4tvy2d/IgNga0uniZxv/t0hELdZmvx+cdA==\"\r\n" +
-                "\t}");
-            File.WriteAllLines(installDir + "Api/data/config/apiconfig.json", text.ToArray());
+            JsonObject jo = JsonSerializer.Deserialize(File.ReadAllText(installDir + "Api/data/config/apiconfig.json"));
+            jo["baseServerIP"] = $"http://{ip}:{port}";
+            jo.Values.Add("multiplayerAuthKeys", new JsonObject(ip, "/g1xCS33QYGC+F2s016WXaQWT8ICnzJvdqcVltNtWljrkCyjd5Ut4tvy2d/IgNga0uniZxv/t0hELdZmvx+cdA=="));
+            File.WriteAllText(installDir + "Api/data/config/apiconfig.json", JsonSerializer.Serialize(jo, JsonSerializationSettings.Default));
             Console.WriteLine("Edited ApiConfig.json");
         }
 
         private static void EditCloudburstYml(string installDir, string ip, int port)
         {
-            List<string> text = File.ReadAllLines(installDir + "Cloudburst/cloudburst.yml").ToList();
-            text[5] = $"  earth-api: \"{ip}:{port}/1/api\"";
-            for (int i = 0; i < text.Count; i++)
-                if (text[i].Contains("generator: cloudburst:standard"))
-                    text[i] = text[i].Replace("generator: cloudburst:standard", "generator: genoa:void");
-            File.WriteAllLines(installDir + "Cloudburst/cloudburst.yml", text.ToArray());
+            YamlFile file = new YamlFile(installDir + "Cloudburst/cloudburst.yml");
+            file.Obj["settings"]["earth-api"] = $"{ip}:{port}/1/api";
+            Dictionary<object, object> Settings = file.Obj["worlds"]["world"] as Dictionary<object, object>;
+            Settings["generator"] = "genoa:void";
+            file.Obj["worlds"]["world"] = Settings;
+            Settings = file.Obj["worlds"]["nether"] as Dictionary<object, object>;
+            Settings["generator"] = "genoa:void";
+            file.Obj["worlds"]["nether"] = Settings;
+
+            file.Save();
             Console.WriteLine("Edited Cloudburst.yml");
         }
 
         private static void EditCloudburstServerProperties(string installDir, string ip)
         {
-            List<string> text = File.ReadAllLines(installDir + "Cloudburst/server.properties").ToList();
-            text[2] = $"server-ip={ip}";
-            text[8] = "spawn-protection=0";
-            text[text.Count - 12] = "gamemode=1";
-            text[text.Count - 6] = "allow-nether=true";
-            text[text.Count - 2] = "xbox-auth=false";
-            File.WriteAllLines(installDir + "Cloudburst/server.properties", text.ToArray());
+            LBLFile serverProps = new LBLFile(installDir + "Cloudburst/server.properties", '=');
+            serverProps["server-ip"] = ip;
+            serverProps["spawn-protection"] = "0";
+            serverProps["gamemode"] = "1";
+            serverProps["allow-nether"] = "true";
+            serverProps["xbox-auth"] = "false";
+            serverProps.Save();
             Console.WriteLine("Edited server.properties");
         }
 
         private static void AddBuildplateToPlayer(string installDir)
         {
             List<string> buildPlateUtil = File.ReadAllLines(installDir + "Api/Util/BuildplateUtils.cs").ToList();
-            buildPlateUtil.Insert(33, "            if (!buildplates.UnlockedBuildplates.Contains(new Guid(\"53470044-075c-4baa-a515-814fabd7c59e\"))) {\r\n" +
-            "                buildplates.UnlockedBuildplates.Add(new Guid(\"53470044-075c-4baa-a515-814fabd7c59e\"));\r\n" +
-            "				 WritePlayerBuildplateList(playerId, buildplates);\r\n" +
-            "            }");
+            buildPlateUtil.Insert(33, 
+                "            if (!buildplates.UnlockedBuildplates.Contains(new Guid(\"53470044-075c-4baa-a515-814fabd7c59e\"))) {\r\n" +
+                "                buildplates.UnlockedBuildplates.Add(new Guid(\"53470044-075c-4baa-a515-814fabd7c59e\"));\r\n" +
+                "				 WritePlayerBuildplateList(playerId, buildplates);\r\n" +
+                "            }"
+            );
             File.WriteAllLines(installDir + "Api/Util/BuildplateUtils.cs", buildPlateUtil.ToArray());
             Console.WriteLine("Edited BuildplateUtils.cs");
         }
