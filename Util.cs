@@ -52,20 +52,5 @@ namespace ProjectEarthLauncher
                 goto getKey;
             Console.Clear();
         }
-
-        public static Dictionary<string, T> ToDictionary<T>(this object o)
-        {
-            Dictionary<string, T> dictionary = new Dictionary<string, T>();
-            foreach (PropertyDescriptor property in TypeDescriptor.GetProperties(o))
-                AddPropertyToDictionary<T>(property, o, dictionary);
-            return dictionary;
-        }
-
-        private static void AddPropertyToDictionary<T>(PropertyDescriptor property, object source, Dictionary<string, T> dictionary)
-        {
-            object value = property.GetValue(source);
-            if (value is T vt)
-                dictionary.Add(property.Name, vt);
-        }
     }
 }

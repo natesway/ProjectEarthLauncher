@@ -88,31 +88,27 @@ namespace ProjectEarthLauncher
 
         private static void InstallTileServer()
         {
-            Console.WriteLine("Download and Install wsl update: https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi");
+            Logger.Log("Download and Install wsl update: https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi");
 
             string _version = GetCommandVersion("docker", true);
             string dockerVersion = string.Empty;
             if (_version != null && _version != string.Empty)
                 dockerVersion = Encoding.UTF8.GetString(Encoding.Unicode.GetBytes(_version));
             if (dockerVersion == string.Empty) {
-                Console.WriteLine("Docker wasn't detected, you can download it here: https://docs.docker.com/get-docker/");
-                Console.WriteLine("After you install it, press any key to continue...");
-                Console.ReadKey(true);
+                Logger.Log("Docker wasn't detected, you can download it here: https://docs.docker.com/get-docker/");
+                Logger.PAKC("After you install it");
                 _version = GetCommandVersion("docker", true);
                 if (_version != null && _version != string.Empty)
                     dockerVersion = Encoding.UTF8.GetString(Encoding.Unicode.GetBytes(_version));
                 if (dockerVersion == string.Empty) {
-                    Console.WriteLine("Still couldn't detect docker, force install? (Y/N):");
-                    char typed = Console.ReadKey().KeyChar; Console.WriteLine();
-                    if (typed != 'y' && typed != 'Y')
+                    if (!Logger.YNInput("Still couldn't detect docker, force install?"))
                         return;
                 }
-            } 
-            Console.WriteLine($"Docker detected ({dockerVersion})");
-            Console.WriteLine("If you haven't done this before go to the config file at C:\\Users\\<username>\\AppData\\Roaming\\Docker\\settings.json, and set \"wslEngineEnabled\": true");
-            Console.WriteLine("After that Restart");
-            Console.WriteLine("Press any key to continue...");
-            Console.ReadKey(true);
+            }
+            Logger.Log($"Docker detected ({dockerVersion})");
+            Logger.Log("If you haven't done this before go to the config file at C:\\Users\\<username>\\AppData\\Roaming\\Docker\\settings.json, and set \"wslEngineEnabled\": true");
+            Logger.Log("After that Restart");
+            Logger.PAKC(string.Empty);
             
 
             BetterFolderBrowser browser = new BetterFolderBrowser()
@@ -142,17 +138,17 @@ namespace ProjectEarthLauncher
             }
 
             if (!File.Exists(apiExePath)) {
-                FatalError("Api couldn't be found, make sure you have selected folder with Api and Cloudburst in it");
+                Logger.FatalError("Api couldn't be found, make sure you have selected folder with Api and Cloudburst in it");
             }
             else if (!File.Exists(cloudburstPath + "cloudburst.jar")) {
-                FatalError("Cloudburst couldn't be found, make sure you have selected folder with Api and Cloudburst in it");
+                Logger.FatalError("Cloudburst couldn't be found, make sure you have selected folder with Api and Cloudburst in it");
             }
 
 
             LauncherInfo info = LauncherInfo.Load(path + "Api/");
 
             if (info.IsTileServerInstalled)
-                FatalError("TileServer is already installed");
+                Logger.FatalError("TileServer is already installed");
 
             try {
                 DownloadFile(GetUrl("tileserver", urls), path + "tileserver.zip", "TileServer.zip", true);
@@ -161,21 +157,20 @@ namespace ProjectEarthLauncher
                 config = config.Replace("\"serve_data\": false", "\"serve_data\": true");
                 config = config.Replace("\"tiles.projectearth.dev\"", $"\"{info.LastIP}\"");
                 File.WriteAllText(path + "TileServer/config.json", config);
-                Console.WriteLine("Edited config.json");
+                Logger.Debug("Edited config.json");
                 string[] configAr = File.ReadAllLines(path + "Api/data/config/apiconfig.json"); // 	"tileServerUrl": "https://tiles.projectearth.dev",
                 configAr[3] = $" 	\"tileServerUrl\": \"http://{info.LastIP}:8080\",";
                 File.WriteAllLines(path + "Api/data/config/apiconfig.json", configAr);
-                Console.WriteLine("Edited apiconfig.json");
+                Logger.Debug("Edited apiconfig.json");
                 File.WriteAllText(path + "TileServer/start.bat", $"docker run --rm -it -v \"{path}TileServer\\:\"/data -p 8080:8080 maptiler/tileserver-gl");
-                Console.WriteLine("Created start.bat");
+                Logger.Debug("Created start.bat");
             } catch (Exception e) {
-                Exception(e);
+                Logger.Exception(e);
             }
 
             info.IsTileServerInstalled = true;
             info.Save(path + "Api/PELauncher_config.txt");
-            Console.WriteLine("Done, press any key to continue...");
-            Console.ReadKey(true);
+            Logger.PAKC("Done");
         }
 
         private static string GetCommandVersion(string command, bool checkType2 = false)
@@ -286,13 +281,10 @@ namespace ProjectEarthLauncher
             bool cloudburstDetected = Directory.Exists(path + "Cloudburst");
 
             if (!apiDetected || !cloudburstDetected)
-                FatalError("Api or Cloudburst wasn't detecten inside selected folder");
+                Logger.FatalError("Api or Cloudburst wasn't detecten inside selected folder");
 
 
-            Console.WriteLine($"Are you sure you want to uninstall from {path} (Y/N):");
-            char typed = Console.ReadKey().KeyChar;
-            Console.WriteLine(); // looks bad without newline
-            if (typed != 'y' && typed != 'Y')
+            if (!Logger.YNInput($"Are you sure you want to uninstall from {path}"))
                 return;
 
             LauncherInfo info = LauncherInfo.Load(path + "Api/");
@@ -308,19 +300,18 @@ namespace ProjectEarthLauncher
                 if (info.IsTileServerInstalled && Directory.Exists(path + "TileServer"))
                     IOExtensions.Directory_Delete(path + "Cloudburst");
 
-                Console.WriteLine("Succesfully Uninstalled, Press any key to continue...");
-                Console.ReadKey(true);
+                Logger.PAKC("Succesfully Uninstalled");
             }
             catch (Exception e) {
-                FatalError("Failed to Uninstall:", false);
+                Logger.FatalError("Failed to Uninstall:", false);
                 if (Directory.Exists(path + "Api"))
-                    FatalError("Couldn't delete Api", false);
+                    Logger.FatalError("Couldn't delete Api", false);
                 if (Directory.Exists(path + "Cloudburst"))
-                    FatalError("Couldn't delete Cloudburst", false);
+                    Logger.FatalError("Couldn't delete Cloudburst", false);
                 if (info.IsTileServerInstalled && Directory.Exists(path + "TileServer"))
-                    FatalError("Couldn't delete TileServer", false);
+                    Logger.FatalError("Couldn't delete TileServer", false);
 
-                Exception(e);
+                Logger.Exception(e);
             }
         }
 
@@ -350,9 +341,9 @@ namespace ProjectEarthLauncher
             }
 
             if (!File.Exists(apiExePath)) {
-                FatalError("Api couldn't be found, make sure you have selected folder with Api and Cloudburst in it");
+                Logger.FatalError("Api couldn't be found, make sure you have selected folder with Api and Cloudburst in it");
             } else if (!File.Exists(cloudburstPath + "cloudburst.jar")) {
-                FatalError("Cloudburst couldn't be found, make sure you have selected folder with Api and Cloudburst in it");
+                Logger.FatalError("Cloudburst couldn't be found, make sure you have selected folder with Api and Cloudburst in it");
             }
 
             LauncherInfo info = LauncherInfo.Load(path + "Api/");
@@ -360,21 +351,31 @@ namespace ProjectEarthLauncher
             if (!info.IsStaticIP && info.LastIP != GetLocalIPAddress()) { // update ip
                 string ip = GetLocalIPAddress();
                 // api config
-                List<string> text = File.ReadAllLines(path + "Api/data/config/apiconfig.json").ToList();
-                text[1] = $"	\"baseServerIP\": \"http://{ip}\",";
-                text[20] = $"		\"{ip}\":\"/g1xCS33QYGC+F2s016WXaQWT8ICnzJvdqcVltNtWljrkCyjd5Ut4tvy2d/IgNga0uniZxv/t0hELdZmvx+cdA==\"";
-                File.WriteAllLines(path + "Api/data/config/apiconfig.json", text.ToArray());
+                JsonObject jo = JsonSerializer.Deserialize(File.ReadAllText(path + "Api/data/config/apiconfig.json"));
+                if (((string)jo["baseServerIP"]).Contains(":"))
+                    jo["baseServerIP"] = $"http://{ip}:{((string)jo["baseServerIP"]).Split(':')[1].Split('"')[0]}";
+                else
+                    jo["baseServerIP"] = $"http://{ip}";
+                jo["multiplayerAuthKeys"] = new JsonObject(ip, "/g1xCS33QYGC+F2s016WXaQWT8ICnzJvdqcVltNtWljrkCyjd5Ut4tvy2d/IgNga0uniZxv/t0hELdZmvx+cdA==");
+                File.WriteAllText(path + "Api/data/config/apiconfig.json", JsonSerializer.Serialize(jo, JsonSerializationSettings.Default));
+
                 // ip.txt
                 File.WriteAllText(path + "Cloudburst/plugins/GenoaAllocatorPlugin/ip.txt",
                     ip);
+
                 // cloudburst.yml
-                text = File.ReadAllLines(path + "Cloudburst/cloudburst.yml").ToList();
-                text[5] = $"  earth-api: \"{ip}/1/api\"";
-                File.WriteAllLines(path + "Cloudburst/cloudburst.yml", text.ToArray());
+                YamlFile file = new YamlFile(path + "Cloudburst/cloudburst.yml");
+                string last = (string)file.Obj["settings"]["earth-api"];
+                if (last.Contains(":"))
+                    file.Obj["settings"]["earth-api"] = $"{ip}:{last.Split(':')[1].Split('/')[0]}/1/api";
+                else
+                    file.Obj["settings"]["earth-api"] = $"{ip}/1/api";
+                file.Save();
+
                 // server.properties
-                text = File.ReadAllLines(path + "Cloudburst/server.properties").ToList();
-                text[2] = $"server-ip={ip}";
-                File.WriteAllLines(path + "Cloudburst/server.properties", text.ToArray());
+                LBLFile serverProps = new LBLFile(path + "Cloudburst/server.properties", '=');
+                serverProps["server-ip"] = ip;
+                serverProps.Save();
 
                 if (info.IsTileServerInstalled && File.Exists(path + "TileServer/config.json")) {
 
@@ -391,7 +392,7 @@ namespace ProjectEarthLauncher
                 info.LastIP = ip;
                 info.Save(path + "Api/PELauncher_config.txt");
 
-                Console.WriteLine($"IP change detected, updated ip to: {ip}");
+                Logger.Log($"IP change detected, updated ip to: {ip}");
             }
 
             ProcessStartInfo processInfo = new ProcessStartInfo(apiExePath);
@@ -401,8 +402,7 @@ namespace ProjectEarthLauncher
             processInfo.WorkingDirectory = path + "Api";
             Process.Start(processInfo);
 
-            Console.WriteLine("Wait for api to start, then press any key...");
-            Console.ReadKey(true);
+            Logger.PAKC("Wait for api to start");
 
             processInfo = new ProcessStartInfo("cmd.exe", "/c java -jar cloudburst.jar");
             processInfo.CreateNoWindow = false;
@@ -411,7 +411,7 @@ namespace ProjectEarthLauncher
             processInfo.WorkingDirectory = Path.GetDirectoryName(cloudburstPath);
             Process.Start(processInfo);
 
-            Console.WriteLine("Cloudburst started");
+            Logger.Debug("Cloudburst started");
 
             if (info.IsTileServerInstalled) {
                 if (File.Exists(path + "TileServer/config.json")) {
@@ -423,16 +423,15 @@ namespace ProjectEarthLauncher
                     Process tileServerProcess = Process.Start(processInfo);
                     Thread.Sleep(1000);
                     if (tileServerProcess.HasExited) {
-                        Console.WriteLine("Failed to launch TileServer, make sure docker is running by opening Docker Desktop");
+                        Logger.FatalError("Failed to launch TileServer, make sure docker is running by opening Docker Desktop", false);
                     } else
-                        Console.WriteLine("TileServer started");
+                        Logger.Debug("TileServer started");
                 }
                 else
-                    Warning("Config say TileServer is installed, but config.json couldn't be found");
+                    Logger.Warning("Config say TileServer is installed, but config.json couldn't be found");
             }
 
-            Console.WriteLine("Launched, press any key to continue...");
-            Console.ReadKey(true);
+            Logger.PAKC("Launched");
         }
 
         private static void Install()
@@ -440,10 +439,9 @@ namespace ProjectEarthLauncher
             // load urls
             Dictionary<string, string> urls = LoadUrls();
 
-            Console.WriteLine("Make sure you have installed:\n - .net sdk 5.0, make sure you have this version! (used for api compilation)\n - java 8 (if there are errors in the cloudburst part, " +
+            Logger.Log("Make sure you have installed:\n - .net sdk 5.0, make sure you have this version! (used for api compilation)\n - java 8 (if there are errors in the cloudburst part, " +
                 "it's probably because of wrong java version");
-            Console.WriteLine("If you have these installed press any key to continue...");
-            Console.ReadKey(true);
+            Logger.PAKC("If you have these installed");
 
             BetterFolderBrowser browser = new BetterFolderBrowser()
             {
@@ -464,69 +462,46 @@ namespace ProjectEarthLauncher
                 bool cloudburstDetected = Directory.Exists(path + "Cloudburst");
 
                 if (apiDetected && cloudburstDetected)
-                    FatalError("Already installed to this directory");
+                    Logger.FatalError("Already installed to this directory");
                 else if (cloudburstDetected)
-                    FatalError("Folder \"Api\" was detected, you need to delete this folder for the instalation to proceed");
+                    Logger.FatalError("Folder \"Api\" was detected, you need to delete this folder for the instalation to proceed");
                 else if (apiDetected)
-                    FatalError("Folder \"Cloudburst\" was detected, you need to delete this folder for the instalation to proceed");
+                    Logger.FatalError("Folder \"Cloudburst\" was detected, you need to delete this folder for the instalation to proceed");
 
                 // get ip
                 string ip = GetLocalIPAddress();
                 bool gotIp = ip != string.Empty;
 
-                Console.WriteLine($"Is your ip static (Y/N):");
-                char typedChar = Console.ReadKey().KeyChar;
-                Console.WriteLine(); // looks bad without newline
+                bool isIpStatic = Logger.YNInput("Is your ip static");
 
-                bool isIpStatic = false;
-                if (typedChar == 'y' || typedChar == 'Y')
-                    isIpStatic = true;
-
-                if (ip != string.Empty && isIpStatic) {
-                    Console.WriteLine($"Is this your ip (will be used for server) \"{ip}\" (Y/N):");
-                    char typed = Console.ReadKey().KeyChar;
-                    Console.WriteLine(); // looks bad without newline
-                    if (typed != 'y' && typed != 'Y')
-                        ip = string.Empty;
-                }
+                if (ip != string.Empty && isIpStatic && !Logger.YNInput($"Is this your ip (will be used for server) \"{ip}\""))
+                    ip = string.Empty;
 
                 if (ip == string.Empty && isIpStatic) {
                     if (gotIp)
-                        Console.WriteLine("Please enter your ip manually");
+                        Logger.Log("Please enter your ip manually");
                     else
-                        Console.WriteLine("Couldn't get your ip, please enter it manually");
+                        Logger.Log("Couldn't get your ip, please enter it manually");
                     getIp:
-                    Console.Write("Server's IP (192.168.x.x): ");
-                    ip = Console.ReadLine();
-                    if (!IPAddress.TryParse(ip, out _)) {
-                        Warning("Couldn't parse ip, are you sure it's correct ? (Y/N): ");
-                        char typed = Console.ReadKey().KeyChar;
-                        Console.WriteLine(); // looks bad without newline
-                        if (typed != 'y' && typed != 'Y')
-                            goto getIp;
-                    }
+                    ip = Logger.Input("Server's IP (192.168.x.x)");
+                    if (!IPAddress.TryParse(ip, out _) && !Logger.YNInputWarning("Couldn't parse ip, are you sure it's correct?"))
+                        goto getIp;
                 }
 
                 int port = 80;
-                Console.WriteLine("Do you want to change port (default is 80) (Y/N): ");
-                typedChar = Console.ReadKey().KeyChar;
-                Console.WriteLine(); // looks bad without newline
-                if (typedChar == 'y' || typedChar == 'Y') {
+                if (Logger.YNInput("Do you want to change port (default is 80)")) {
                     getPort:
-                    Console.Write("Server's port (0 - 65535): "); // ushort.MaxValue
-                    if (ushort.TryParse(Console.ReadLine(), out ushort _port))
+                    string read = Logger.Input("Server's port (0 - 65535)"); // ushort.MaxValue
+                    if (ushort.TryParse(read, out ushort _port))
                         port = _port;
                     else {
-                        Warning("Couldn't parse port, are you sure it's correct ? (Y/N): ");
-                        char typed = Console.ReadKey().KeyChar;
-                        Console.WriteLine(); // looks bad without newline
-                        if (typed != 'y' && typed != 'Y')
-                            goto getPort;
+                        Logger.Log("Couldn't parse ip, make sure it's in range");
+                        goto getPort;
                     }
                 }
 
                 // Api
-                Console.WriteLine("----------Api SetUp Start----------");
+                Logger.Log("----------Api SetUp Start----------");
                 DownloadFile(GetUrl("api", urls), path + "api.zip", "Api", true);
                 UnzipFile(path + "api.zip", path + "_api", true);
                 ExtractDir(path + "_api", path + "_api/ProjectEarthServerAPI", path + "Api");
@@ -550,19 +525,18 @@ namespace ProjectEarthLauncher
 
                 File.WriteAllText(path + "Api/build.bat", buildFileText);
                 Console.SetCursorPosition(0, Console.CursorTop + 1);
-                Console.WriteLine("Building Api...");
+                Logger.Debug("Building Api...");
                 ExecuteCommand(buildFileText, path + "Api", "Build succeeded.");
-                Console.SetCursorPosition(0, Console.CursorTop - 1);
                 if (!File.Exists(path + "Api/bin/Release/net5.0/win-x64/ProjectEarthServerAPI.exe"))
-                    FatalError("Failed to build, or you have wrong version of .net sdk installed");
+                    Logger.FatalError("Failed to build, or you have wrong version of .net sdk installed");
 
-                Console.WriteLine("Build Api       ");
+                Logger.DebugOverwrite("Build Api");
 
                 LauncherInfo info = new LauncherInfo(isIpStatic, ip, false, port);
                 info.Save(path + "Api/PELauncher_config.txt");
 
-                Console.WriteLine("----------Api SetUp Done----------");
-                Console.WriteLine("----------Cloudburst SetUp Start----------");
+                Logger.Log("----------Api SetUp Done----------");
+                Logger.Log("----------Cloudburst SetUp Start----------");
 
                 Directory.CreateDirectory(path + "Cloudburst");
                 DownloadFile(GetUrl("cloudburst", urls), path + "Cloudburst/cloudburst.jar", "Cloudburst", true);
@@ -573,41 +547,40 @@ namespace ProjectEarthLauncher
                 Directory.CreateDirectory(path + "Cloudburst/plugins/GenoaAllocatorPlugin");
                 File.WriteAllText(path + "Cloudburst/plugins/GenoaAllocatorPlugin/key.txt",
                     "/g1xCS33QYGC+F2s016WXaQWT8ICnzJvdqcVltNtWljrkCyjd5Ut4tvy2d/IgNga0uniZxv/t0hELdZmvx+cdA==");
-                Console.WriteLine("Created key.txt");
+                Logger.Debug("Created key.txt");
                 File.WriteAllText(path + "Cloudburst/plugins/GenoaAllocatorPlugin/ip.txt",
                     ip);
-                Console.WriteLine("Created ip.txt");
+                Logger.Debug("Created ip.txt");
                 EditCloudburstYml(path, ip, port);
                 EditCloudburstServerProperties(path, ip);
 
                 File.WriteAllText(path + "Cloudburst/Run.bat", "java -jar cloudburst.jar");
-                Console.WriteLine("Created Run.bat");
+                Logger.Debug("Created Run.bat");
 
-                Console.WriteLine("----------Cloudburst SetUp Done----------");
-                Console.WriteLine("Press any key to continue...");
+                Logger.Log("----------Cloudburst SetUp Done----------");
+                Logger.Log("Press any key to continue...");
                 Console.ReadKey(true);
             } catch (Exception e) {
-                Exception(e, false);
-                Console.WriteLine("Press any key to delete files...");
+                Logger.Exception(e, false);
+                Logger.Log("Press any key to delete files...");
                 Console.ReadKey(true);
 
                 if (!CleanFailedInstall(path, out Exception cleanEx, out List<string> failedToDelete)) {
                     if (failedToDelete.Count > 0) {
-                        Console.WriteLine("Failed to delete:");
+                        Logger.Log("Failed to delete:");
                         for (int i = 0; i < failedToDelete.Count; i++)
-                            Console.WriteLine($" -{failedToDelete[i]}");
+                            Logger.Log($" -{failedToDelete[i]}");
 
-                        Console.WriteLine("Please delete these file(s)/folder(s) before installing again to this directory");
+                        Logger.Log("Please delete these file(s)/folder(s) before installing again to this directory");
                     }
-                    Console.WriteLine("Installation Clean(Deletion) Exception:");
-                    Exception(cleanEx, false);
+                    Logger.Log("Installation Clean(Deletion) Exception:");
+                    Logger.Exception(cleanEx, false);
                 }
                 else
-                    Console.WriteLine("Failed to install, already created files were deleted");
+                    Logger.Log("Failed to install, already created files were deleted");
 
 
-                Console.WriteLine("Press any key to exit...");
-                Console.ReadKey(true);
+                Logger.PAKX(string.Empty);
                 return;
             }
         }
@@ -617,7 +590,7 @@ namespace ProjectEarthLauncher
             string[] lines = File.ReadAllLines(installDir + "Api/appsettings.json");
             lines[4] = $"        \"Url\": \"http://*:{port}\"";
             File.WriteAllLines(installDir + "Api/appsettings.json", lines);
-            Console.WriteLine("Changed port in appsettings.json");
+            Logger.Debug("Changed port in appsettings.json");
          }
 
         private static Dictionary<string, string> LoadUrls()
@@ -699,7 +672,7 @@ namespace ProjectEarthLauncher
             jo["baseServerIP"] = $"http://{ip}:{port}";
             jo.Values.Add("multiplayerAuthKeys", new JsonObject(ip, "/g1xCS33QYGC+F2s016WXaQWT8ICnzJvdqcVltNtWljrkCyjd5Ut4tvy2d/IgNga0uniZxv/t0hELdZmvx+cdA=="));
             File.WriteAllText(installDir + "Api/data/config/apiconfig.json", JsonSerializer.Serialize(jo, JsonSerializationSettings.Default));
-            Console.WriteLine("Edited ApiConfig.json");
+            Logger.Debug("Edited ApiConfig.json");
         }
 
         private static void EditCloudburstYml(string installDir, string ip, int port)
@@ -714,7 +687,7 @@ namespace ProjectEarthLauncher
             file.Obj["worlds"]["nether"] = Settings;
 
             file.Save();
-            Console.WriteLine("Edited Cloudburst.yml");
+            Logger.Debug("Edited Cloudburst.yml");
         }
 
         private static void EditCloudburstServerProperties(string installDir, string ip)
@@ -726,7 +699,7 @@ namespace ProjectEarthLauncher
             serverProps["allow-nether"] = "true";
             serverProps["xbox-auth"] = "false";
             serverProps.Save();
-            Console.WriteLine("Edited server.properties");
+            Logger.Debug("Edited server.properties");
         }
 
         private static void AddBuildplateToPlayer(string installDir)
@@ -739,12 +712,12 @@ namespace ProjectEarthLauncher
                 "            }"
             );
             File.WriteAllLines(installDir + "Api/Util/BuildplateUtils.cs", buildPlateUtil.ToArray());
-            Console.WriteLine("Edited BuildplateUtils.cs");
+            Logger.Debug("Edited BuildplateUtils.cs");
         }
 
         private static void RunCloudburstSetup(string installDir)
         {
-            Console.WriteLine("Running Cloudburst to generate file structure...");
+            Logger.Debug("Running Cloudburst to generate file structure...");
             ProcessStartInfo processInfo = new ProcessStartInfo("cmd.exe", "/c java -jar cloudburst.jar");
             processInfo.CreateNoWindow = true;
             processInfo.UseShellExecute = false;
@@ -759,10 +732,9 @@ namespace ProjectEarthLauncher
 
             process.Close();
 
-            Console.SetCursorPosition(0, Console.CursorTop - 1);
             if (!Directory.Exists(installDir + "Cloudburst/plugins") || !File.Exists(installDir + "Cloudburst/cloudburst.yml"))
-                FatalError("Failed to generate cloudburst files, make sure you have right java version");
-            Console.WriteLine("Generated Cloudburst file structure                     ");
+                Logger.FatalError("Failed to generate cloudburst files, make sure you have right java version");
+            Logger.DebugOverwrite("Generated Cloudburst file structure");
         }
 
         private static bool ExecuteCommand(string command, string executeFrom, string lookFor)
@@ -800,7 +772,7 @@ namespace ProjectEarthLauncher
 
         private static void ExtractFiles(string from)
         {
-            Console.WriteLine($"Extracting from {Path.GetFileName(from)}...");
+            Logger.Debug($"Extracting from {Path.GetFileName(from)}...");
             string to = Directory.GetParent(from).FullName;
 
             string[] files = Directory.GetFiles(from);
@@ -812,13 +784,12 @@ namespace ProjectEarthLauncher
 
             Directory.Delete(from);
 
-            Console.SetCursorPosition(0, Console.CursorTop - 1);
-            Console.WriteLine($"Extracted from {Path.GetFileName(from)}       ");
+            Logger.DebugOverwrite($"Extracted from {Path.GetFileName(from)}");
         }
 
         private static void UnzipFile(string fromPath, string toPath, bool deleteZip)
         {
-            Console.WriteLine($"Unzipping {Path.GetFileName(fromPath)}...");
+            Logger.Debug($"Unzipping {Path.GetFileName(fromPath)}...");
             string tempPath = Path.GetDirectoryName(fromPath) + "/temp";
             ZipFile.ExtractToDirectory(fromPath, tempPath);
             string insideName = Directory.GetDirectories(tempPath)[0];
@@ -826,41 +797,7 @@ namespace ProjectEarthLauncher
             if (deleteZip)
                 File.Delete(fromPath);
 
-            Console.SetCursorPosition(0, Console.CursorTop - 1);
-            Console.WriteLine($"Unzipped {Path.GetFileName(fromPath)}       ");
-        }
-
-        private static void Exception(Exception e, bool exit = true)
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"An exception was thrown:\n{e.Message}");
-            Console.ResetColor();
-            Console.WriteLine($"Type:\n{e.GetType()}");
-            Console.WriteLine($"Stack trace:\n{e.StackTrace}");
-            if (exit) {
-                Console.Write("Press any key to exit...");
-                Console.ReadKey(true);
-                Environment.Exit(2);
-            }
-        }
-
-        private static void FatalError(string message, bool exit = true)
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"Encountered an error: {message}");
-            Console.ResetColor();
-            if (exit) {
-                Console.Write("Press any key to exit...");
-                Console.ReadKey(true);
-                Environment.Exit(2);
-            }
-        }
-
-        private static void Warning(string message)
-        {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine(message);
-            Console.ResetColor();
+            Logger.DebugOverwrite($"Unzipped {Path.GetFileName(fromPath)}");
         }
 
         private static string GetUrl(string name, Dictionary<string, string> urls)
@@ -869,11 +806,11 @@ namespace ProjectEarthLauncher
             if (urls.TryGetValue(name.ToLower(), out url))
                 return url;
             else if (defaultUrls.TryGetValue(name.ToLower(), out url)) {
-                Warning($"Couldn't get url \"{name}\" from file, using default: {url}");
+                Logger.Warning($"Couldn't get url \"{name}\" from file, using default: {url}");
                 return url;
             }
             else {
-                FatalError($"Could't get url for \"{name.ToLower()}\"");
+                Logger.FatalError($"Could't get url for \"{name.ToLower()}\"");
                 return null;
             }
         }
@@ -891,19 +828,17 @@ namespace ProjectEarthLauncher
         private static bool DownloadFile(string url, string savePath, string dispName, bool needed)
         {
             const int barLenght = 20;
-            int line = Console.CursorTop;
 
             bool downloaded = false;
             bool cancelled = false;
             bool printing = false;
 
-            Console.WriteLine($"Starting download for: {dispName}...");
+            Logger.Debug($"Starting download for: {dispName}...");
 
             long totalSize = GetFileSize(url);
             double lastReceived = 0d;
 
-            Console.SetCursorPosition(0, line);
-            Console.WriteLine($"Starting download for: {dispName} 0/{(totalSize < 0 ? "?" : totalSize.ToString())}");
+            Logger.DebugOverwrite($"Starting download for: {dispName} 0/{(totalSize < 0 ? "?" : totalSize.ToString())}");
 
             using (WebClient wc = new WebClient()) {
                 wc.DownloadProgressChanged += (object sender, DownloadProgressChangedEventArgs e) =>
@@ -935,12 +870,10 @@ namespace ProjectEarthLauncher
                             sTotal += 0;
                         string sBytesTotal = $"{sTotal}{tu}";
 
-                        Console.SetCursorPosition(0, line);
-                        Console.WriteLine($"Downloading {dispName} {new string('■', currentBarLenght)}{new string('-', barLenght - currentBarLenght)}" +
-                            $" {sBytesReceived}/{sBytesTotal} {e.ProgressPercentage}%                        ");
+                        Logger.DebugOverwrite($"Downloading {dispName} {new string('■', currentBarLenght)}{new string('-', barLenght - currentBarLenght)}" +
+                            $" {sBytesReceived}/{sBytesTotal} {e.ProgressPercentage}%");
                     } else {
-                        Console.SetCursorPosition(0, line);
-                        Console.WriteLine($"Downloading {dispName} {sBytesReceived}/?                                                   ");
+                        Logger.DebugOverwrite($"Downloading {dispName} {sBytesReceived}/?");
                     }
                     printing = false;
 
@@ -959,11 +892,10 @@ namespace ProjectEarthLauncher
 
             double rec = IOExtensions.ChooseAppropriate(totalSize != 0 ? totalSize : lastReceived, IOExtensions.Unit.B, out IOExtensions.Unit u);
 
-            Console.SetCursorPosition(0, line);
-            Console.WriteLine($"Downloaded {dispName} {MathPlus.Round(rec, 2)}{u} 100%                                                                          ");
-
             if (needed && cancelled)
-                FatalError($"Could't download \"{dispName}\"");
+                Logger.FatalError($"Could't download \"{dispName}\"");
+
+            Logger.DebugOverwrite($"Downloaded {dispName} {MathPlus.Round(rec, 2)}{u} 100%");
 
             return !cancelled;
         }
