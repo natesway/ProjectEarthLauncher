@@ -18,7 +18,7 @@ namespace ProjectEarthLauncher
             Console.Write("[Input_YN] ");
             Console.ResetColor();
             Console.Write(message + " (Y/N): ");
-            char typed = Console.ReadKey(true).KeyChar;
+            char typed = Console.ReadKey().KeyChar;
             Console.WriteLine();
             return typed == 'Y' || typed == 'y';
         }
@@ -44,7 +44,7 @@ namespace ProjectEarthLauncher
             Console.Write(message);
             Console.ResetColor();
             Console.Write(" (Y/N): ");
-            char typed = Console.ReadKey(true).KeyChar;
+            char typed = Console.ReadKey().KeyChar;
             Console.WriteLine();
             return typed == 'Y' || typed == 'y';
         }

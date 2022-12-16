@@ -100,7 +100,7 @@ namespace ProjectEarthLauncher
             ShowList("Download ProjectEarth Patcher app from here: https://ci.rtm516.co.uk/job/ProjectEarth/job/PatcherApp/job/master/lastSuccessfulBuild/artifact/SignApksBuilder-out/AndroidKeys/key0/dev.projectearth.patcher-1.0-unsigned.apk/dev.projectearth.patcher-1.0.apk");
             ShowList("Open the patcher and click the 3 dots in the top right corner");
             ShowList("Click settings and tap on \"Locator Server\"");
-            ShowList("Delete the default value and enter the ip you have the server setup on (http://192.168.x.x)");
+            ShowList("Delete the default value and enter the ip you have the server setup on (http://192.168.x.x:x)");
             ShowList("Click OK, go back and click \"Patch and Install\"");
             ShowList("Wait for it to finish and click install");
             ShowList("Click Settings and \"Alow apps from this source\", then click Install, after it's done you can uninstall the patcher and Minecraft Earth");

@@ -28,7 +28,7 @@ namespace ProjectEarthLauncher
     {
         private static Dictionary<string, string> defaultUrls = new Dictionary<string, string>()
         {
-            { "api", "https://github.com/jackcaver/Api/archive/refs/heads/master.zip" },
+            { "api", "https://github.com/SuperMatejCZ/ProjectEarthApi/archive/refs/heads/master.zip" },
             { "data", "https://github.com/jackcaver/ApiData/archive/refs/heads/master.zip" },
             { "resourcepack", "https://www.googleapis.com/drive/v3/files/1Kbx9DVKdBOr-VkmfCw_b1beEwyupeLak?alt=media&key=AIzaSyAA9ERw-9LZVEohRYtCWka_TQc6oXmvcVU&supportsAllDrives=True" },
             { "tileserver", "https://github.com/Project-Earth-Team/TileServer/archive/refs/heads/master.zip" },
@@ -503,18 +503,29 @@ namespace ProjectEarthLauncher
                 // Api
                 Logger.Log("----------Api SetUp Start----------");
                 DownloadFile(GetUrl("api", urls), path + "api.zip", "Api", true);
-                UnzipFile(path + "api.zip", path + "_api", true);
-                ExtractDir(path + "_api", path + "_api/ProjectEarthServerAPI", path + "Api");
+                bool isDefaultInstall = true;
+                if (urls.ContainsKey("api") && urls["api"] != defaultUrls["api"])
+                    isDefaultInstall = false;
+                if (isDefaultInstall) {
+                    UnzipFile(path + "api.zip", path + "Api", true);
+                }
+                else {
+                    Logger.Debug("Non default install detected");
+                    UnzipFile(path + "api.zip", path + "_api", true);
+                    ExtractDir(path + "_api", path + "_api/ProjectEarthServerAPI", path + "Api");
+                }
 
                 // ApiData
                 DownloadFile(GetUrl("data", urls), path + "Api/data/data.zip", "ApiData", true);
                 UnzipFile(path + "Api/data/data.zip", path + "Api/data/_data", true);
                 ExtractFiles(path + "Api/data/_data");
                 // Add buildplate
-                Directory.CreateDirectory(path + "Api/data/buildplates/");
-                File.WriteAllText(path + "Api/data/buildplates/" + buildplateFileName, buildplateFileText);
-                // Make sure new players have this buildplate
-                AddBuildplateToPlayer(path);
+                if (!isDefaultInstall) {
+                    Directory.CreateDirectory(path + "Api/data/buildplates/");
+                    File.WriteAllText(path + "Api/data/buildplates/" + buildplateFileName, buildplateFileText);
+                    // Make sure new players have this buildplate
+                    AddBuildplateToPlayer(path);
+                }
                 // Add IP and key
                 EditApiConfig(path, ip, port);
                 // Resourcepack
@@ -523,10 +534,22 @@ namespace ProjectEarthLauncher
                 if (port != 80)
                     EditAppSettings(path, port);
 
-                File.WriteAllText(path + "Api/build.bat", buildFileText);
-                Console.SetCursorPosition(0, Console.CursorTop + 1);
                 Logger.Debug("Building Api...");
-                ExecuteCommand(buildFileText, path + "Api", "Build succeeded.");
+                if (isDefaultInstall) {
+                    ProcessStartInfo processInfo = new ProcessStartInfo(path + "Api/build.bat");
+                    processInfo.CreateNoWindow = true;
+                    processInfo.UseShellExecute = false;
+                    processInfo.RedirectStandardOutput = false;
+                    processInfo.WorkingDirectory = path + "Api";
+
+                    Process process = Process.Start(processInfo);
+                    process.WaitForExit();
+                    process.Close();
+                }
+                else {
+                    File.WriteAllText(path + "Api/build.bat", buildFileText);
+                    ExecuteCommand(buildFileText, path + "Api", "Build succeeded.");
+                }
                 if (!File.Exists(path + "Api/bin/Release/net5.0/win-x64/ProjectEarthServerAPI.exe"))
                     Logger.FatalError("Failed to build, or you have wrong version of .net sdk installed");
 
