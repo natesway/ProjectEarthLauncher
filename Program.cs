@@ -214,7 +214,7 @@ namespace ProjectEarthLauncher
             Console.WriteLine(" -Email: mata.v114@gmail.com");
             Console.WriteLine("Made possible by:");
             Console.WriteLine(" -Project Earth Team - https://github.com/Project-Earth-Team");
-            Console.WriteLine(" -JackCaver (Api, ApiData) - https://github.com/jackcaver");
+            Console.WriteLine(" -Jackcaver (Api, ApiData) - https://github.com/jackcaver");
             Console.WriteLine("© CuRsEd GaMeS");
             Util.HandleBack();
         }
